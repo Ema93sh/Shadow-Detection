@@ -13,4 +13,4 @@ shadowDetector.o: shadowDetector.cpp shadowDetector.h
 	$(CC) $(IFLAGS) $(CFLAGS) -c shadowDetector.cpp
 
 clean:
-	rm *.o
+	rm -rf *.o *~ shadowDetector

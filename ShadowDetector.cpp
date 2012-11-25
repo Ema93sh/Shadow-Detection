@@ -1,6 +1,7 @@
 #include "ShadowDetector.h"
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
 #define PI 3.14
@@ -10,6 +11,68 @@ using namespace cv;
 
 void ShadowDetector::removeShadows()
 {
+
+	// Need to change all the destination Mat to ratioMap.  Remove all the unwanted Mat variables
+	generateRatioMap();
+
+	// anistrophic image filter
+
+	Mat blured;
+	GaussianBlur( ratioMap, blured, Size(3,3), 0, 0 );
+
+	if( debug )
+	{
+		namedWindow("Blured");
+		imshow("Blured", blured);
+	}
+	// dilate 
+
+	Mat dilated;
+	
+	dilate( blured, dilated, cv::Mat() );
+
+	if(debug)
+	{
+		namedWindow("Dilated Image");
+		imshow("Dilated Image", dilated);
+	}
+
+	Mat candidateShadowPixel, nonShadowPixel;
+	threshold( dilated, candidateShadowPixel, 0, 255, CV_THRESH_OTSU | THRESH_BINARY );
+	
+	if(debug)
+	{
+		namedWindow("Candidate Shadow Pixel");
+		imshow("Candidate Shadow Pixel", candidateShadowPixel);
+	}
+
+	threshold( dilated, nonShadowPixel, 0, 255, CV_THRESH_OTSU | THRESH_BINARY_INV );
+	
+	if(debug)
+	{
+	namedWindow("Non Shadow Pixel");
+	imshow("Non Shadow Pixel", nonShadowPixel);
+	}
+
+	vector< vector<Point> > contours;
+	cv::findContours(candidateShadowPixel,
+			         contours, // a vector of contours
+		         CV_RETR_EXTERNAL, // retrieve the external contours
+			 CV_CHAIN_APPROX_NONE); // all pixels of each contours
+
+	if(debug)
+	{
+
+	Mat result(image.size(),CV_8U,Scalar(255));
+	drawContours(result,contours,
+		                -1, // draw all contours
+				Scalar(0), // in black
+				2); // with a thickness of 2
+	namedWindow("Connected Component Analysis");
+	imshow("Connected Component Analysis", result);
+	}
+
+
 }
 
 void ShadowDetector::displayRatioMap()
@@ -65,13 +128,7 @@ void ShadowDetector::generateRatioMap()
 			rValue.at<uchar>(i, j) = r;
 		}
 	}
-
-	if( debug )
-	{
-		namedWindow("rValue");
-		imshow("rValue", rValue);
-	}
-
+	
 	// find the probability of r value
 	int channels[1];
 	int histSize[1];

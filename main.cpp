@@ -12,9 +12,9 @@ int main( int argc, const char *argv[] )
 		return -1;
 	}
 
-	ShadowDetector sd(argv[1]);
+	ShadowDetector sd(argv[1], true);
 	sd.displayImage();
-	sd.generateRatioMap();
+	sd.removeShadows();
 	sd.displayRatioMap();
 	waitKey();
 	return 0;
